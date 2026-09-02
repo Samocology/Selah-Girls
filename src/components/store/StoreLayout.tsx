@@ -16,7 +16,7 @@ export function StoreLayout({ children }: { children: ReactNode }) {
       <SiteHeader onSearch={() => setSearchOpen(true)} />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <SiteFooter />
-      <MobileBottomNav onSearch={() => setSearchOpen(true)} />
+      <MobileBottomNav />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );

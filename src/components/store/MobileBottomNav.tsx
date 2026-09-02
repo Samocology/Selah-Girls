@@ -1,14 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, LayoutGrid, Heart, User, ShoppingBag } from "lucide-react";
+import { Home, LayoutGrid, Heart, User, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 
-interface MobileBottomNavProps {
-  onSearch: () => void;
-}
-
-export function MobileBottomNav({ onSearch }: MobileBottomNavProps) {
+export function MobileBottomNav() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { count } = useWishlist();
   const { count: cartCount } = useCart();
@@ -33,7 +29,7 @@ export function MobileBottomNav({ onSearch }: MobileBottomNavProps) {
       aria-label="Primary"
       className="safe-bottom fixed inset-x-2 bottom-2 z-50 rounded-2xl border border-white/70 bg-[rgb(255_253_253_/_0.84)] pt-1.5 shadow-nav backdrop-blur-2xl md:hidden"
     >
-      <ul className="grid grid-cols-6 px-1">
+      <ul className="grid grid-cols-5 px-1">
         <li className="grid place-items-center">
           <Link to="/" aria-label="Home" className={itemClass(isActive("/"))}>
             <span className={iconWrap(isActive("/"))}>
@@ -50,19 +46,6 @@ export function MobileBottomNav({ onSearch }: MobileBottomNavProps) {
             </span>
             Bag
           </Link>
-        </li>
-        <li className="grid place-items-center">
-          <button
-            type="button"
-            onClick={onSearch}
-            aria-label="Open search"
-            className={itemClass(isActive("/search"))}
-          >
-            <span className={iconWrap(isActive("/search"))}>
-              <Search className="size-5" strokeWidth={1.75} aria-hidden />
-            </span>
-            Search
-          </button>
         </li>
         <li className="grid place-items-center">
           <Link to="/shop" aria-label="Shop" className={itemClass(isActive("/shop"))}>

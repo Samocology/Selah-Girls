@@ -1,8 +1,13 @@
--- Supabase schema for Selah e-commerce app
--- Run this in Supabase SQL Editor or via migration
+-- Production-safe Supabase schema for Selah e-commerce app
+-- Run this once in the Supabase SQL Editor
 
--- Profiles extends auth.users with app-specific fields
-create table public.profiles (
+-- Grant basic schema access
+grant usage on schema public to anon, authenticated;
+
+-- ============================================================
+-- PROFILES
+-- ============================================================
+create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   name text,
   phone text,
@@ -13,20 +18,28 @@ create table public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy "Public profiles are viewable by everyone"
-  on public.profiles for select
-  using ( true );
+drop policy if exists "Profiles are viewable by everyone" on public.profiles;
+create policy "Profiles are viewable by everyone"
+  on public.profiles for select using ( true );
 
-create policy "Users can insert their own profile"
-  on public.profiles for insert
-  with check ( auth.uid() = id );
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile"
+  on public.profiles for insert with check ( auth.uid() = id );
 
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
-  on public.profiles for update
-  using ( auth.uid() = id );
+  on public.profiles for update using ( auth.uid() = id );
 
--- Categories
-create table public.categories (
+drop policy if exists "Admins can update any profile" on public.profiles;
+create policy "Admins can update any profile"
+  on public.profiles for update using (
+    exists ( select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin' )
+  );
+
+-- ============================================================
+-- CATEGORIES
+-- ============================================================
+create table if not exists public.categories (
   id text primary key,
   slug text unique not null,
   name text not null,
@@ -38,30 +51,28 @@ create table public.categories (
 
 alter table public.categories enable row level security;
 
-create policy "Categories are viewable by everyone"
-  on public.categories for select
-  using ( true );
+drop policy if exists "Categories viewable by everyone" on public.categories;
+create policy "Categories viewable by everyone"
+  on public.categories for select using ( true );
 
-create policy "Only admins can insert categories"
-  on public.categories for insert
-  with check ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Admins manage categories" on public.categories;
+create policy "Admins manage categories"
+  on public.categories for all using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  ) with check (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Only admins can update categories"
-  on public.categories for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
-create policy "Only admins can delete categories"
-  on public.categories for delete
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
--- Products
-create table public.products (
+-- ============================================================
+-- PRODUCTS
+-- ============================================================
+create table if not exists public.products (
   id text primary key,
   slug text unique not null,
   name text not null,
   description text not null,
   details text[] not null default '{}',
-  category text not null references public.categories(slug) on delete restrict,
+  category text not null,
   subcategory text not null default '',
   price numeric not null,
   old_price numeric,
@@ -83,24 +94,22 @@ create table public.products (
 
 alter table public.products enable row level security;
 
-create policy "Products are viewable by everyone"
-  on public.products for select
-  using ( true );
+drop policy if exists "Products viewable by everyone" on public.products;
+create policy "Products viewable by everyone"
+  on public.products for select using ( true );
 
-create policy "Only admins can insert products"
-  on public.products for insert
-  with check ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Admins manage products" on public.products;
+create policy "Admins manage products"
+  on public.products for all using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  ) with check (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Only admins can update products"
-  on public.products for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
-create policy "Only admins can delete products"
-  on public.products for delete
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
--- Customers (CRM)
-create table public.customers (
+-- ============================================================
+-- CUSTOMERS
+-- ============================================================
+create table if not exists public.customers (
   id text primary key,
   name text not null,
   email text unique not null,
@@ -114,24 +123,34 @@ create table public.customers (
 
 alter table public.customers enable row level security;
 
-create policy "Admins can view customers"
-  on public.customers for select
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Customers viewable by admins" on public.customers;
+create policy "Customers viewable by admins"
+  on public.customers for select using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Admins can insert customers"
-  on public.customers for insert
-  with check ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Customers insertable by admins" on public.customers;
+create policy "Customers insertable by admins"
+  on public.customers for insert with check (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Admins can update customers"
-  on public.customers for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Customers updatable by admins" on public.customers;
+create policy "Customers updatable by admins"
+  on public.customers for update using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Admins can delete customers"
-  on public.customers for delete
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Customers deletable by admins" on public.customers;
+create policy "Customers deletable by admins"
+  on public.customers for delete using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
--- Orders
-create table public.orders (
+-- ============================================================
+-- ORDERS
+-- ============================================================
+create table if not exists public.orders (
   id text primary key,
   reference text unique not null,
   customer_id text not null,
@@ -153,20 +172,27 @@ create table public.orders (
 
 alter table public.orders enable row level security;
 
+drop policy if exists "Users can view own orders" on public.orders;
 create policy "Users can view own orders"
-  on public.orders for select
-  using ( auth.uid() in ( select id from public.profiles where email = orders.customer_email ) or exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+  on public.orders for select using (
+    auth.uid() in ( select id from public.profiles where email = orders.customer_email )
+    or exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
+drop policy if exists "Authenticated users can insert orders" on public.orders;
 create policy "Authenticated users can insert orders"
-  on public.orders for insert
-  with check ( auth.uid() in ( select id from public.profiles where email = orders.customer_email ) or exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+  on public.orders for insert with check ( auth.uid() is not null );
 
-create policy "Only admins can update orders"
-  on public.orders for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Admins can update orders" on public.orders;
+create policy "Admins can update orders"
+  on public.orders for update using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
--- Reviews
-create table public.reviews (
+-- ============================================================
+-- REVIEWS & TESTIMONIALS
+-- ============================================================
+create table if not exists public.reviews (
   id text primary key,
   product_id text not null references public.products(id) on delete cascade,
   author text not null,
@@ -178,24 +204,19 @@ create table public.reviews (
 
 alter table public.reviews enable row level security;
 
-create policy "Reviews are viewable by everyone"
-  on public.reviews for select
-  using ( true );
+drop policy if exists "Reviews viewable by everyone" on public.reviews;
+create policy "Reviews viewable by everyone"
+  on public.reviews for select using ( true );
 
-create policy "Only admins can insert reviews"
-  on public.reviews for insert
-  with check ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Admins manage reviews" on public.reviews;
+create policy "Admins manage reviews"
+  on public.reviews for all using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  ) with check (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Only admins can update reviews"
-  on public.reviews for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
-create policy "Only admins can delete reviews"
-  on public.reviews for delete
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
--- Testimonials
-create table public.testimonials (
+create table if not exists public.testimonials (
   id text primary key,
   name text not null,
   location text not null,
@@ -205,38 +226,70 @@ create table public.testimonials (
 
 alter table public.testimonials enable row level security;
 
-create policy "Testimonials are viewable by everyone"
-  on public.testimonials for select
-  using ( true );
+drop policy if exists "Testimonials viewable by everyone" on public.testimonials;
+create policy "Testimonials viewable by everyone"
+  on public.testimonials for select using ( true );
 
-create policy "Only admins can insert testimonials"
-  on public.testimonials for insert
-  with check ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+drop policy if exists "Admins manage testimonials" on public.testimonials;
+create policy "Admins manage testimonials"
+  on public.testimonials for all using (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  ) with check (
+    exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' )
+  );
 
-create policy "Only admins can update testimonials"
-  on public.testimonials for update
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
+-- ============================================================
+-- REALTIME
+-- ============================================================
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'products'
+  ) then
+    alter publication supabase_realtime add table public.products;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'orders'
+  ) then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'customers'
+  ) then
+    alter publication supabase_realtime add table public.customers;
+  end if;
+end $$;
 
-create policy "Only admins can delete testimonials"
-  on public.testimonials for delete
-  using ( exists ( select 1 from public.profiles where id = auth.uid() and role = 'admin' ) );
-
--- Realtime publication (optional, Supabase usually auto-publishes)
-alter publication supabase_realtime add table public.products;
-alter publication supabase_realtime add table public.orders;
-alter publication supabase_realtime add table public.customers;
-
--- Auto-create profile on signup
+-- ============================================================
+-- AUTO-CREATE PROFILE ON SIGNUP
+-- ============================================================
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, name, phone, role)
-  values (new.id, coalesce(new.raw_user_meta_data->>'name', new.email), null, 'customer')
+  insert into public.profiles (id, name, role)
+  values (new.id, coalesce(new.raw_user_meta_data->>'name', new.email), 'customer')
   on conflict (id) do nothing;
   return new;
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ============================================================
+-- BACKFILL existing users
+-- ============================================================
+insert into public.profiles (id, name, role)
+select 
+  au.id,
+  coalesce(au.raw_user_meta_data->>'full_name', au.raw_user_meta_data->>'name', au.email),
+  'customer'
+from auth.users au
+left join public.profiles p on p.id = au.id
+where p.id is null
+on conflict (id) do nothing;

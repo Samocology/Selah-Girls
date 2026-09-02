@@ -52,15 +52,38 @@ export const authService = {
     return user;
   },
 
-  async register(input: { name: string; email: string; phone: string; password: string }) {
+  /**
+   * Step 1 of registration. Creates the user and sends an 8-digit OTP to their email.
+   * The user cannot sign in until they verify the OTP.
+   */
+  async startRegistration(input: { name: string; email: string; phone: string; password: string }) {
     const client = supabase;
     if (!client) throw new Error("Supabase is not configured");
     const { data, error } = await client.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: { name: input.name, phone: input.phone } },
+      options: {
+        data: { name: input.name, phone: input.phone },
+        emailRedirectTo: `${window.location.origin}/account`,
+      },
     });
     if (error) throw new Error(error.message);
+    return { email: input.email, userId: data.user?.id ?? null };
+  },
+
+  /**
+   * Step 2 of registration. Verifies the OTP and signs the user in.
+   */
+  async verifyRegistrationOtp(email: string, code: string) {
+    const client = supabase;
+    if (!client) throw new Error("Supabase is not configured");
+    const { data, error } = await client.auth.verifyOtp({
+      email,
+      token: code,
+      type: "signup",
+    });
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error("Verification failed");
     const { data: profile } = await client
       .from("profiles")
       .select("*")
@@ -68,6 +91,30 @@ export const authService = {
       .maybeSingle();
     if (!profile) throw new Error("Profile not found");
     return mapProfileToUser(profile, data.user.email);
+  },
+
+  /**
+   * Resends the OTP to the user's email.
+   */
+  async resendRegistrationOtp(email: string) {
+    const client = supabase;
+    if (!client) throw new Error("Supabase is not configured");
+    const { error } = await client.auth.resend({
+      type: "signup",
+      email,
+    });
+    if (error) throw new Error(error.message);
+    return { sent: true };
+  },
+
+  /**
+   * Backwards-compatible register. If email confirmation is enabled, this will
+   * throw with a message telling the user to check their email. Prefer the
+   * startRegistration/verifyRegistrationOtp pair for the new OTP flow.
+   */
+  async register(input: { name: string; email: string; phone: string; password: string }) {
+    await this.startRegistration(input);
+    throw new Error("Check your email for a verification code to finish creating your account.");
   },
 
   async requestPasswordReset(email: string) {

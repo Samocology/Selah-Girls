@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Selah</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f6f1ea; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1f1d18;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f1ea; padding: 40px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 560px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(31, 29, 24, 0.08);">
+            <!-- Brand banner -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #1f1d18 0%, #3a342b 100%); padding: 32px 40px; text-align: center;">
+                <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 600; color: #f6f1ea; letter-spacing: 0.5px;">Selah</div>
+                <div style="margin-top: 4px; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #c8b89a;">Girl Society</div>
+              </td>
+            </tr>
+
+            <!-- Hero -->
+            <tr>
+              <td style="padding: 48px 40px 8px 40px; text-align: center;">
+                <div style="display: inline-block; padding: 6px 14px; background-color: #f4ecdd; border-radius: 999px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #8a6a3a; font-weight: 600;">
+                  Welcome to the society
+                </div>
+                <h1 style="margin: 18px 0 8px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; line-height: 1.2; color: #1f1d18;">
+                  Pause. Reflect. Declare.
+                </h1>
+                <p style="margin: 0; font-size: 14px; line-height: 22px; color: #6b665d;">
+                  Hi there &mdash; use the code below to confirm your email and finish creating your Selah account.
+                </p>
+              </td>
+            </tr>
+
+            <!-- OTP card -->
+            <tr>
+              <td style="padding: 32px 40px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #fbf6ec 0%, #f0e4cc 100%); border: 1px solid #e6d6b3; border-radius: 16px;">
+                  <tr>
+                    <td style="padding: 28px 24px; text-align: center;">
+                      <p style="margin: 0 0 14px 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #8a6a3a; font-weight: 600;">
+                        Your verification code
+                      </p>
+                      <div style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #1f1d18; padding: 12px 0;">
+                        {{ .Token }}
+                      </div>
+                      <p style="margin: 14px 0 0 0; font-size: 12px; color: #8a7a5a;">
+                        This code expires in 60 seconds.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Instructions -->
+            <tr>
+              <td style="padding: 0 40px 24px 40px;">
+                <p style="margin: 0 0 12px 0; font-size: 13px; line-height: 20px; color: #6b665d;">
+                  Enter this code in the open sign-up window to activate your account. If you didn't request this, you can safely ignore the email.
+                </p>
+                <p style="margin: 0; font-size: 13px; line-height: 20px; color: #6b665d;">
+                  For your security, never share this code with anyone. Selah will never ask for it.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td style="padding: 8px 40px;">
+                <div style="height: 1px; background-color: #ece5d8;"></div>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 24px 40px 32px 40px; text-align: center;">
+                <p style="margin: 0 0 6px 0; font-size: 12px; color: #8a8278;">
+                  Wear what you believe.
+                </p>
+                <p style="margin: 0; font-size: 11px; color: #a8a094;">
+                  &copy; 2026 Selah Girl Society &middot; Lagos, Nigeria
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin-top: 20px; font-size: 11px; color: #a8a094; text-align: center;">
+            If the button above didn't work, paste this URL into your browser:<br />
+            <a href="{{ .ConfirmationURL }}" style="color: #8a6a3a; word-break: break-all;">{{ .ConfirmationURL }}</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

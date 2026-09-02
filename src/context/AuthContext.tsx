@@ -14,6 +14,14 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<User>;
   googleLogin: (credential: string) => Promise<User>;
   adminLogin: (email: string, password: string) => Promise<User>;
+  startRegistration: (input: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+  }) => Promise<{ email: string; userId: string | null }>;
+  verifyRegistrationOtp: (email: string, code: string) => Promise<User>;
+  resendRegistrationOtp: (email: string) => Promise<{ sent: boolean }>;
   register: (input: {
     name: string;
     email: string;
@@ -31,13 +39,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const client = supabase;
+    if (!client) {
+      setReady(true);
+      return;
+    }
+
+    const handleSession = async () => {
+      const {
+        data: { session },
+      } = await client.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await client
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (profile) {
+          const mapped = {
+            id: profile.id,
+            name: profile.name ?? session.user.email ?? "User",
+            email: session.user.email ?? "",
+            phone: profile.phone ?? "",
+            role: profile.role as "customer" | "admin",
+          };
+          setUser(mapped);
+          try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+          } catch {
+            /* storage unavailable */
+          }
+        }
+      }
+    };
+
+    void handleSession().then(() => setReady(true));
+
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) setUser(JSON.parse(raw) as User);
     } catch {
       /* ignore corrupted storage */
     }
-    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -111,6 +154,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const next = await authService.register(input);
         persist(next);
         return next;
+      },
+      async startRegistration(input) {
+        return authService.startRegistration(input);
+      },
+      async verifyRegistrationOtp(email, code) {
+        const next = await authService.verifyRegistrationOtp(email, code);
+        persist(next);
+        return next;
+      },
+      async resendRegistrationOtp(email) {
+        return authService.resendRegistrationOtp(email);
       },
       async updateProfile(patch) {
         if (!user) throw new Error("Not signed in");
