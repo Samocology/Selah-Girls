@@ -21,27 +21,27 @@ function sortKeyToSupabase(sort: SortKey) {
 
 function mapSupabaseProduct(row: Record<string, unknown>): Product {
   return {
-    id: String(row.id),
-    slug: String(row.slug),
-    name: String(row.name),
-    description: String(row.description),
-    details: Array.isArray(row.details) ? (row.details as string[]) : [],
-    category: String(row.category),
-    subcategory: String(row.subcategory ?? ""),
-    price: Number(row.price),
-    oldPrice: row.old_price == null ? undefined : Number(row.old_price),
-    sku: String(row.sku),
-    stock: Number(row.stock),
-    sizes: Array.isArray(row.sizes) ? (row.sizes as string[]) : [],
-    colors: Array.isArray(row.colors) ? (row.colors as Product["colors"]) : [],
-    images: Array.isArray(row.images) ? (row.images as string[]) : [],
-    tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
-    rating: Number(row.rating),
-    reviewsCount: Number(row.reviews_count),
-    featured: Boolean(row.featured),
-    bestSeller: Boolean(row.best_seller),
-    newArrival: Boolean(row.new_arrival),
-    status: String(row.status) as Product["status"],
+    id: String(row["id"]),
+    slug: String(row["slug"]),
+    name: String(row["name"]),
+    description: String(row["description"]),
+    details: Array.isArray(row["details"]) ? (row["details"] as string[]) : [],
+    category: String(row["category"]),
+    subcategory: String(row["subcategory"] ?? ""),
+    price: Number(row["price"]),
+    oldPrice: row["old_price"] == null ? undefined : Number(row["old_price"]),
+    sku: String(row["sku"]),
+    stock: Number(row["stock"]),
+    sizes: Array.isArray(row["sizes"]) ? (row["sizes"] as string[]) : [],
+    colors: Array.isArray(row["colors"]) ? (row["colors"] as Product["colors"]) : [],
+    images: Array.isArray(row["images"]) ? (row["images"] as string[]) : [],
+    tags: Array.isArray(row["tags"]) ? (row["tags"] as string[]) : [],
+    rating: Number(row["rating"]),
+    reviewsCount: Number(row["reviews_count"]),
+    featured: Boolean(row["featured"]),
+    bestSeller: Boolean(row["best_seller"]),
+    newArrival: Boolean(row["new_arrival"]),
+    status: String(row["status"]) as Product["status"],
   };
 }
 
@@ -199,13 +199,13 @@ export const productService = {
       .order("date", { ascending: false });
     if (error) throw new ApiError(error.message, 400);
     return (data ?? []).map((row: Record<string, unknown>) => ({
-      id: String(row.id),
-      productId: String(row.product_id),
-      author: String(row.author),
-      rating: Number(row.rating),
-      title: String(row.title),
-      body: String(row.body),
-      date: String(row.date),
+      id: String(row["id"]),
+      productId: String(row["product_id"]),
+      author: String(row["author"]),
+      rating: Number(row["rating"]),
+      title: String(row["title"]),
+      body: String(row["body"]),
+      date: String(row["date"]),
     })) as Review[];
   },
 
@@ -218,11 +218,11 @@ export const productService = {
       .order("rating", { ascending: false });
     if (error) throw new ApiError(error.message, 400);
     return (data ?? []).map((row: Record<string, unknown>) => ({
-      id: String(row.id),
-      name: String(row.name),
-      location: String(row.location),
-      rating: Number(row.rating),
-      quote: String(row.quote),
+      id: String(row["id"]),
+      name: String(row["name"]),
+      location: String(row["location"]),
+      rating: Number(row["rating"]),
+      quote: String(row["quote"]),
     })) as Testimonial[];
   },
 
@@ -235,15 +235,32 @@ export const productService = {
     const client = supabase;
     if (!client) throw new Error("Supabase is not configured");
     const id = `prd-${Date.now()}`;
+    
+    // Explicitly map all fields to snake_case for Supabase
     const payload = {
       id,
-      ...input,
+      slug: input.slug,
+      name: input.name,
+      description: input.description,
+      details: input.details,
+      category: input.category,
+      subcategory: input.subcategory,
+      price: input.price,
       old_price: input.oldPrice ?? null,
+      sku: input.sku,
+      stock: input.stock,
+      sizes: input.sizes,
+      colors: input.colors,
+      images: input.images,
+      tags: input.tags,
+      rating: input.rating,
       reviews_count: input.reviewsCount,
       featured: input.featured,
       best_seller: input.bestSeller,
       new_arrival: input.newArrival,
+      status: input.status,
     };
+    
     const { data, error } = await client.from("products").insert(payload).select("*").single();
     if (error) throw new ApiError(error.message, 400);
     return mapSupabaseProduct(data);
@@ -252,12 +269,31 @@ export const productService = {
   async update(id: string, patch: Partial<Product>) {
     const client = supabase;
     if (!client) throw new Error("Supabase is not configured");
-    const payload: Record<string, unknown> = { ...patch };
-    if (patch.oldPrice !== undefined) payload.old_price = patch.oldPrice;
-    if (patch.reviewsCount !== undefined) payload.reviews_count = patch.reviewsCount;
-    if (patch.featured !== undefined) payload.featured = patch.featured;
-    if (patch.bestSeller !== undefined) payload.best_seller = patch.bestSeller;
-    if (patch.newArrival !== undefined) payload.new_arrival = patch.newArrival;
+    
+    // Explicitly map all fields to snake_case for Supabase
+    const payload: Record<string, unknown> = {};
+    
+    if (patch.slug !== undefined) payload["slug"] = patch.slug;
+    if (patch.name !== undefined) payload["name"] = patch.name;
+    if (patch.description !== undefined) payload["description"] = patch.description;
+    if (patch.details !== undefined) payload["details"] = patch.details;
+    if (patch.category !== undefined) payload["category"] = patch.category;
+    if (patch.subcategory !== undefined) payload["subcategory"] = patch.subcategory;
+    if (patch.price !== undefined) payload["price"] = patch.price;
+    if (patch.oldPrice !== undefined) payload["old_price"] = patch.oldPrice;
+    if (patch.sku !== undefined) payload["sku"] = patch.sku;
+    if (patch.stock !== undefined) payload["stock"] = patch.stock;
+    if (patch.sizes !== undefined) payload["sizes"] = patch.sizes;
+    if (patch.colors !== undefined) payload["colors"] = patch.colors;
+    if (patch.images !== undefined) payload["images"] = patch.images;
+    if (patch.tags !== undefined) payload["tags"] = patch.tags;
+    if (patch.rating !== undefined) payload["rating"] = patch.rating;
+    if (patch.reviewsCount !== undefined) payload["reviews_count"] = patch.reviewsCount;
+    if (patch.featured !== undefined) payload["featured"] = patch.featured;
+    if (patch.bestSeller !== undefined) payload["best_seller"] = patch.bestSeller;
+    if (patch.newArrival !== undefined) payload["new_arrival"] = patch.newArrival;
+    if (patch.status !== undefined) payload["status"] = patch.status;
+    
     const { data, error } = await client
       .from("products")
       .update(payload)
@@ -285,13 +321,32 @@ export const productService = {
       .eq("id", id)
       .single();
     if (sourceError || !source) throw new ApiError("Product not found", 404);
+    
+    // Create a clean copy with only snake_case fields
     const copy = {
-      ...source,
       id: `prd-${Date.now()}`,
-      slug: `${source.slug}-copy`,
-      name: `${source.name} (Copy)`,
+      slug: `${source["slug"]}-copy`,
+      name: `${source["name"]} (Copy)`,
+      description: source["description"],
+      details: source["details"],
+      category: source["category"],
+      subcategory: source["subcategory"],
+      price: source["price"],
+      old_price: source["old_price"],
+      sku: source["sku"],
+      stock: source["stock"],
+      sizes: source["sizes"],
+      colors: source["colors"],
+      images: source["images"],
+      tags: source["tags"],
+      rating: source["rating"],
+      reviews_count: source["reviews_count"],
+      featured: source["featured"],
+      best_seller: source["best_seller"],
+      new_arrival: source["new_arrival"],
       status: "draft",
     };
+    
     const { data, error } = await client.from("products").insert(copy).select("*").single();
     if (error) throw new ApiError(error.message, 400);
     return mapSupabaseProduct(data);

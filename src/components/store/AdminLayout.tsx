@@ -1,12 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { 
-  BarChart3, 
-  Boxes, 
-  ClipboardList, 
-  LayoutDashboard, 
-  LogOut, 
-  Package, 
+import {
+  BarChart3,
+  Boxes,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  Package,
   Users,
   ChevronRight,
   Settings,
@@ -25,7 +25,7 @@ import {
   EyeOff,
   ArrowRight,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,7 +37,12 @@ const links = [
   { to: "/admin/products", label: "Products", icon: Boxes, description: "Manage inventory" },
   { to: "/admin/orders", label: "Orders", icon: ClipboardList, description: "Track orders" },
   { to: "/admin/customers", label: "Customers", icon: Users, description: "Customer list" },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3, description: "Insights & reports" },
+  {
+    to: "/admin/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    description: "Insights & reports",
+  },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -55,9 +60,27 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   const notifications = [
-    { id: 1, title: 'New order received', description: 'Order #1234 from Lagos', time: '2 min ago', unread: true },
-    { id: 2, title: 'Low stock alert', description: '3 products running low', time: '1 hour ago', unread: true },
-    { id: 3, title: 'Payment received', description: 'Order #1230 payment confirmed', time: '3 hours ago', unread: false },
+    {
+      id: 1,
+      title: "New order received",
+      description: "Order #1234 from Lagos",
+      time: "2 min ago",
+      unread: true,
+    },
+    {
+      id: 2,
+      title: "Low stock alert",
+      description: "3 products running low",
+      time: "1 hour ago",
+      unread: true,
+    },
+    {
+      id: 3,
+      title: "Payment received",
+      description: "Order #1230 payment confirmed",
+      time: "3 hours ago",
+      unread: false,
+    },
   ];
 
   return (
@@ -77,9 +100,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             >
               {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
-            
+
             <Link to="/" className="group flex items-center gap-3">
-              <motion.span 
+              <motion.span
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
                 className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sm font-bold text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/20"
@@ -87,7 +110,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 S
               </motion.span>
               <span className="font-display text-2xl tracking-tight">
-                Selah <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-sidebar-foreground/55">Studio</span>
+                Selah{" "}
+                <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-sidebar-foreground/55">
+                  Studio
+                </span>
               </span>
             </Link>
           </div>
@@ -115,7 +141,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 className="relative p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
               >
                 <Bell className="size-5" />
-                {notifications.some(n => n.unread) && (
+                {notifications.some((n) => n.unread) && (
                   <span className="absolute top-1 right-1 size-2 rounded-full bg-red-500" />
                 )}
               </motion.button>
@@ -137,20 +163,26 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                           key={notification.id}
                           className={cn(
                             "w-full text-left p-4 hover:bg-muted/50 transition-colors border-b border-border/50",
-                            notification.unread && "bg-primary/5"
+                            notification.unread && "bg-primary/5",
                           )}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "size-8 rounded-lg flex items-center justify-center shrink-0",
-                              notification.unread ? "bg-primary/10" : "bg-muted"
-                            )}>
+                            <div
+                              className={cn(
+                                "size-8 rounded-lg flex items-center justify-center shrink-0",
+                                notification.unread ? "bg-primary/10" : "bg-muted",
+                              )}
+                            >
                               <Bell className="size-4 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium">{notification.title}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{notification.description}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {notification.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {notification.time}
+                              </p>
                             </div>
                             {notification.unread && (
                               <span className="size-2 rounded-full bg-primary shrink-0 mt-1" />
@@ -178,7 +210,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors"
               >
                 <div className="size-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-sm font-semibold text-primary-foreground">
-                  {user?.name?.[0]?.toUpperCase() || 'A'}
+                  {user?.name?.[0]?.toUpperCase() || "A"}
                 </div>
                 <div className="hidden lg:block text-left">
                   <p className="text-sm font-medium leading-tight">{user?.name}</p>
@@ -208,7 +240,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                         Security
                       </button>
                       <div className="h-px bg-border my-2" />
-                      <button 
+                      <button
                         onClick={logout}
                         className="w-full flex items-center gap-2 p-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                       >
@@ -232,13 +264,13 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <Package className="size-3.5" />
             Workspace
           </div>
-          
+
           {/* Mobile Navigation */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.nav
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="lg:hidden"
               >
@@ -253,7 +285,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                           "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
                           active
                             ? "bg-primary text-primary-foreground shadow-md"
-                            : "hover:bg-muted"
+                            : "hover:bg-muted",
                         )}
                       >
                         <Icon className="size-5" />
@@ -283,19 +315,23 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       "group relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all",
                       active
                         ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    <Icon className={cn(
-                      "size-[1.1rem] transition-transform group-hover:scale-110",
-                      active && "text-primary-foreground"
-                    )} />
+                    <Icon
+                      className={cn(
+                        "size-[1.1rem] transition-transform group-hover:scale-110",
+                        active && "text-primary-foreground",
+                      )}
+                    />
                     <div className="flex-1">
                       <p>{label}</p>
-                      <p className={cn(
-                        "text-xs",
-                        active ? "text-primary-foreground/70" : "text-muted-foreground/60"
-                      )}>
+                      <p
+                        className={cn(
+                          "text-xs",
+                          active ? "text-primary-foreground/70" : "text-muted-foreground/60",
+                        )}
+                      >
                         {description}
                       </p>
                     </div>
@@ -366,7 +402,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 }
 
 export function AdminLogin() {
-  const { adminLogin } = useAuth();
+  const { adminLogin, user, isAdmin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -375,16 +411,22 @@ export function AdminLogin() {
     event.preventDefault();
     setError(null);
     setIsLoading(true);
-    
+
     try {
       const form = new FormData(event.currentTarget);
       await adminLogin(String(form.get("email")), String(form.get("password")));
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
+      setError("Invalid administrator credentials. Redirecting to customer sign-in...");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // If the user just signed in successfully, the parent AdminGate will re-render
+  // and show the admin area automatically. Nothing to do here.
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
@@ -410,7 +452,7 @@ export function AdminLogin() {
         transition={{ duration: 0.5 }}
         className="relative w-full max-w-md"
       >
-        <form 
+        <form
           onSubmit={handleSubmit}
           className="rounded-2xl border border-border bg-background/80 backdrop-blur-xl p-8 shadow-2xl"
         >
@@ -451,11 +493,11 @@ export function AdminLogin() {
               <span className="text-sm font-medium">Email address</span>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <input 
-                  name="email" 
-                  type="email" 
-                  defaultValue="admin@selah.store" 
-                  required 
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue="admin@selah.store"
+                  required
                   placeholder="admin@selah.store"
                   className="h-11 w-full rounded-lg border border-input bg-background pl-9 pr-3 transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 />
@@ -466,11 +508,11 @@ export function AdminLogin() {
               <span className="text-sm font-medium">Password</span>
               <div className="relative mt-2">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <input 
-                  name="password" 
-                  type={showPassword ? "text" : "password"} 
-                  defaultValue="password" 
-                  required 
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  defaultValue="password"
+                  required
                   placeholder="Enter your password"
                   className="h-11 w-full rounded-lg border border-input bg-background pl-9 pr-11 transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 />
@@ -485,7 +527,7 @@ export function AdminLogin() {
             </label>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
             className="mt-6 h-11 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

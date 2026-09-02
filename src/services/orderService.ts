@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { products } from "@/data/catalog";
 import type { CartItem, Order, OrderStatus, PaymentStatus } from "@/types";
 import { ApiError } from "./http";
 
@@ -135,10 +134,20 @@ export const orderService = {
   async analytics(range: "today" | "7d" | "30d" | "3m" | "12m" = "30d") {
     const client = supabase;
     if (!client) throw new Error("Supabase is not configured");
-    const orders = await this.list();
-    const paidOrders = orders.filter((order) => order.paymentStatus === "paid");
+
+    const [ordersResult, productsResult, customersResult] = await Promise.all([
+      client.from("orders").select("*").order("created_at", { ascending: false }),
+      client.from("products").select("id, name, stock, status, price, reviews_count"),
+      client.from("customers").select("id, joined_at"),
+    ]);
+
+    const rows = (ordersResult.data ?? []).map((row) =>
+      mapSupabaseOrder(row as Record<string, unknown>),
+    );
+    const paidOrders = rows.filter((order) => order.paymentStatus === "paid");
     const revenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
-    const orderCount = orders.length;
+    const orderCount = rows.length;
+
     const today = new Date();
     const from = new Date(today);
     if (range === "today") from.setHours(0, 0, 0, 0);
@@ -146,11 +155,11 @@ export const orderService = {
     else if (range === "30d") from.setDate(today.getDate() - 30);
     else if (range === "3m") from.setMonth(today.getMonth() - 3);
     else from.setFullYear(today.getFullYear() - 1);
-    const filtered = orders.filter((o) => new Date(o.createdAt) >= from);
+
     const series = Array.from({ length: 12 }, (_, i) => {
       const d = new Date(from);
       d.setMonth(d.getMonth() + i);
-      const monthOrders = orders.filter((o) => {
+      const monthOrders = rows.filter((o) => {
         const od = new Date(o.createdAt);
         return od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
       });
@@ -163,32 +172,49 @@ export const orderService = {
         orders: monthOrders.length,
       };
     });
+
+    const productRows = (productsResult.data ?? []) as Array<{
+      id: string;
+      name: string;
+      stock: number;
+      status: string;
+      price: number;
+      reviews_count: number;
+    }>;
+    const activeProducts = productRows.filter((p) => p.status === "active");
+    const lowStock = activeProducts.filter((p) => p.stock > 0 && p.stock < 10).length;
+    const outOfStock = activeProducts.filter((p) => p.stock === 0).length;
+
+    const customerRows = (customersResult.data ?? []) as Array<{ joined_at: string }>;
+    const newCustomers = customerRows.filter((c) => new Date(c.joined_at) >= from).length;
+
     return {
       range,
       series,
       categoryPerformance: [],
       revenue,
       orders: orderCount,
-      customers: 5,
-      unitsSold: orders.reduce(
+      customers: customerRows.length,
+      newCustomers,
+      unitsSold: rows.reduce(
         (sum, order) => sum + order.items.reduce((count, item) => count + item.quantity, 0),
         0,
       ),
       averageOrderValue: orderCount ? Math.round(revenue / orderCount) : 0,
       conversionRate: 3.4,
-      pendingOrders: orders.filter((order) => order.status === "pending").length,
+      pendingOrders: rows.filter((order) => order.status === "pending").length,
       paidRevenue: paidOrders.reduce((sum, order) => sum + order.total, 0),
       todayRevenue: 486000,
-      lowStock: products.filter((product) => product.stock > 0 && product.stock < 10).length,
-      outOfStock: products.filter((product) => product.stock === 0).length,
-      totalProducts: products.length,
-      topProducts: [...products]
-        .sort((a, b) => b.reviewsCount - a.reviewsCount)
+      lowStock,
+      outOfStock,
+      totalProducts: productRows.length,
+      topProducts: [...activeProducts]
+        .sort((a, b) => b.reviews_count - a.reviews_count)
         .slice(0, 5)
         .map((product) => ({
           name: product.name,
-          units: product.reviewsCount,
-          revenue: product.price * product.reviewsCount,
+          units: product.reviews_count,
+          revenue: product.price * product.reviews_count,
         })),
     };
   },
